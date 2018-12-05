@@ -48,7 +48,7 @@ fun getMax isGreater minValue x =
     let
 	fun helper ([], _, max, idxMax) = (idxMax, max)
 	  | helper ((h :: t), idx, maxSoFar, idxMaxSoFar) =
-	    if h > maxSoFar
+	    if isGreater (h, maxSoFar)
 	    then helper (t, idx+1, h, idx)
 	    else helper (t, idx+1, maxSoFar, idxMaxSoFar)
     in
@@ -60,6 +60,12 @@ fun getMaxElement isGreater minValue x =
 
 fun getIdxOfMaxElement isGreater minValue x=
     #1 (getMax isGreater minValue x)
+
+fun removeElementFromList _ _ [] = []
+  | removeElementFromList compare el (h :: t) =
+    if compare (el, h) = General.EQUAL
+    then removeElementFromList compare el t
+    else h :: (removeElementFromList compare el t)
 
 (* MAP *)
 structure IntKey =
