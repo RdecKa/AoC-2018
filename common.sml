@@ -23,7 +23,49 @@ fun readFileByLines (infile: string) =
 	helper ()
     end
 
+fun splitBy delimiter =
+    String.tokens (fn x => x = delimiter)
+
+
+(* LIST *)
 fun stringListToIntList (x : string list) =
     case x of
 	[] => []
       | h :: t => valOf (Int.fromString h) :: stringListToIntList (t)
+
+fun createList defaultValue length =
+    let
+	fun helper (idx, x) =
+	    if idx = length
+	    then x
+	    else helper (idx+1, defaultValue :: x)
+    in
+	helper (0, [])
+    end
+
+(* Returns (idxMax, max) *)
+fun getMax isGreater minValue x =
+    let
+	fun helper ([], _, max, idxMax) = (idxMax, max)
+	  | helper ((h :: t), idx, maxSoFar, idxMaxSoFar) =
+	    if h > maxSoFar
+	    then helper (t, idx+1, h, idx)
+	    else helper (t, idx+1, maxSoFar, idxMaxSoFar)
+    in
+	helper (x, 0, minValue, 0)
+    end
+
+fun getMaxElement isGreater minValue x =
+    #2 (getMax isGreater minValue x)
+
+fun getIdxOfMaxElement isGreater minValue x=
+    #1 (getMax isGreater minValue x)
+
+(* MAP *)
+structure IntKey =
+struct
+type ord_key = int
+val compare = Int.compare
+end
+
+structure intMap = RedBlackMapFn(IntKey)

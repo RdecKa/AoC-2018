@@ -6,9 +6,6 @@ datatype claimChange = changeY of int | changeX of int | changeW of int | change
 
 exception InvalidClaimField
 
-fun splitBy delimiter =
-    String.tokens (fn x => x = delimiter)
-
 fun parseLine line =
     let
 	val idStr :: _ :: locStr :: sizeStr :: nil = splitBy #" " line
