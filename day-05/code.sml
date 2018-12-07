@@ -2,22 +2,15 @@ use "../common.sml";
 
 val getInput = (removeElementFromList Char.compare #"\n") o readFileByCharacters
 
-val smallCapitalDiff = Char.ord #"a" - Char.ord #"A"
-
 fun react c1 c2 =
-    abs ((Char.ord c1) - (Char.ord c2)) = smallCapitalDiff
+    abs ((Char.ord c1) - (Char.ord c2)) = Char.ord #"a" - Char.ord #"A"
 
-fun makeReactions [] = []
-  | makeReactions (e1 :: rest) =
-    let
-	val tail = makeReactions rest
-    in
-	case tail of
-	    [] => [e1]
-	  | h :: t => if react e1 h
-		      then t
-		      else e1 :: tail
-    end
+fun makeReactions polymer =
+    List.foldr (fn (e, pol) => if null pol
+			       then [e]
+			       else if react e (hd pol)
+			       then tl pol
+			       else e :: pol) [] polymer
 
 val star1 = List.length o makeReactions
 
@@ -25,30 +18,17 @@ fun isSameLetter c1 c2 =
     Char.compare (c1, c2) = General.EQUAL orelse react c1 c2
 
 fun getPairUnit unit =
-    if Char.ord unit > Char.ord #"Z"
-    then (Char.chr ((Char.ord unit) - smallCapitalDiff), unit)
-    else (unit, Char.chr ((Char.ord unit) + smallCapitalDiff))
+    (Char.toUpper unit, Char.toLower unit)
 
 fun getUniqueUnits polymer =
     let
 	fun cmpr (c1, c2) =
-	    let
-		val o1 = Char.ord c1
-		val o2 = Char.ord c2
-		val e1 = if o1 > Char.ord #"Z"
-			 then o1 - smallCapitalDiff
-			 else o1
-		val e2 = if o2 > Char.ord #"Z"
-			 then o2 - smallCapitalDiff
-			 else o2
-	    in
-		(e1 - e2) < 0
-	    end
+	    ((Char.ord (Char.toLower c1)) - (Char.ord (Char.toLower c2))) < 0
 	val sorted = ListMergeSort.sort cmpr polymer
 	fun helper (new, []) = [new]
 	  | helper (new, h :: t) = if isSameLetter new h
-	    then h :: t
-	    else new :: h :: t
+				   then h :: t
+				   else new :: h :: t
     in
 	List.map getPairUnit (List.foldl helper [] sorted)
     end
@@ -58,13 +38,7 @@ fun removeUnit polymer (capital, small) =
 			  (removeElementFromList Char.compare small polymer)
 
 fun getAllCleanedPolymers polymer =
-    let
-	fun helper [] = []
-	  | helper (hUnit :: tUnit) =
-	    (removeUnit polymer hUnit) :: helper tUnit
-    in
-	helper (getUniqueUnits polymer)
-    end
+    List.map (removeUnit polymer) (getUniqueUnits polymer)
 
 val getTransformedNewPolymers =
     (List.map makeReactions) o getAllCleanedPolymers
