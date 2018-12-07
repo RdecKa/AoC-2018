@@ -26,7 +26,7 @@ fun getBorders listOfPoints =
 
 fun initGrid size =
     let
-	val grid = createGridRef ({x=(~1), y=(~1)}, ~1, ~1) size
+	val grid = createGrid (fn _ => ref ({x=(~1), y=(~1)}, ~1, ~1)) size
 	fun setIndicesY ([], _) = []
 	  | setIndicesY (row :: tr, idy) =
 	    let
@@ -39,7 +39,7 @@ fun initGrid size =
 			setIndicesX (tc, idx+1)
 		    end
 	    in
-		setIndicesX (!row, 0);
+		setIndicesX (row, 0);
 		setIndicesY (tr, idy+1)
 	    end
     in
@@ -50,7 +50,7 @@ fun markGivenPoints {x=baseX, y=baseY} grid =
     let
 	fun updateCell ((id, {x=x, y=y})) =
 	    let
-		val r = getElementInGridRef grid (y-baseY) (x-baseX)
+		val r = getElementInGrid grid (y-baseY) (x-baseX)
 		val coords = #1 (!r)
 	    in
 		r := (coords, id, 0)
@@ -66,7 +66,7 @@ fun getDistancesToAllPoints' enumPoints baseCell cell =
     getDistancesToAllPoints (!cell) baseCell enumPoints
 
 fun getDistancesToAllPointsForAllCells enumPoints baseCell =
-    List.map (fn row => List.map (getDistancesToAllPoints' enumPoints baseCell) (!row))
+    mapOnGrid (getDistancesToAllPoints' enumPoints baseCell)
 
 val getClosestPointForAll =
     let
@@ -78,7 +78,7 @@ val getClosestPointForAll =
 	    then findMin (~1, d) rd
 	    else findMin (minIdSoFar, minSoFar) rd
     in
-	List.map (List.map (findMin (~1, 10000000)))
+	mapOnGrid (findMin (~1, 10000000))
     end
 
 fun isInfinite grid id =
@@ -106,7 +106,7 @@ fun sumOfDist dist =
     List.foldl (fn ((_, d1), (_, d2)) => (~1, d1 + d2)) (~1, 0) dist
 
 fun sumOfDistForAll dists =
-    List.map (List.map sumOfDist) dists
+    mapOnGrid sumOfDist dists
 
 fun star2 distances limit =
     List.foldl op+ 0 (

@@ -78,7 +78,7 @@ fun groupByGuard listOfActions =
 	helper (intMap.empty, listOfActions, ~1)
     end
 
-val getMidnightHour = createList 0 60
+val getMidnightHour = createList (fn _ => 0) 60
 
 fun addSleepingMinutes from to night =
     if null night

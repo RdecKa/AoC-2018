@@ -28,26 +28,24 @@ fun splitBy delimiter =
     String.tokens (fn x => x = delimiter)
 
 
+
 (* LIST *)
 fun stringListToIntList (x : string list) =
     case x of
 	[] => []
       | h :: t => valOf (Int.fromString h) :: stringListToIntList (t)
 
-fun createList defaultValue length =
-    List.tabulate (length, (fn _ => defaultValue))
+fun createList defaultValueFun length =
+    List.tabulate (length, defaultValueFun)
 
-fun createGrid defaultValue (width, height) =
-    createList (createList defaultValue width) height
+fun createGrid defaultValueFun (width, height) =
+    createList (fn _ => (createList defaultValueFun width)) height
 
-fun createListRef defaultValue length =
-    List.tabulate (length, (fn x => ref (defaultValue(x))))
+fun getElementInGrid grid y x =
+    List.nth (List.nth (grid, y), x)
 
-fun createGridRef defaultValue (width, height) =
-    createListRef (fn _ => (createListRef (fn _ => defaultValue) width)) height
-
-fun getElementInGridRef grid y x =
-    List.nth (!(List.nth (grid, y)), x)
+fun mapOnGrid f =
+    List.map (List.map f)
 
 (* Returns (idxMax, max) -- Asumes that there is only one maximum *)
 fun getMax isGreater minValue x =
@@ -75,6 +73,8 @@ fun removeElementFromList _ _ [] = []
 
 fun enumerate x =
     List.tabulate (List.length x, (fn n => (n, List.nth (x, n))))
+
+
 
 (* MAP *)
 structure IntKey =
