@@ -1,4 +1,5 @@
 Control.Print.printLength := 100;
+Control.Print.printDepth := 10;
 Control.Print.linewidth := 80;
 
 fun readFileByCharacters (infile: string) =
@@ -34,16 +35,21 @@ fun stringListToIntList (x : string list) =
       | h :: t => valOf (Int.fromString h) :: stringListToIntList (t)
 
 fun createList defaultValue length =
-    let
-	fun helper (idx, x) =
-	    if idx = length
-	    then x
-	    else helper (idx+1, defaultValue :: x)
-    in
-	helper (0, [])
-    end
+    List.tabulate (length, (fn _ => defaultValue))
 
-(* Returns (idxMax, max) *)
+fun createGrid defaultValue (width, height) =
+    createList (createList defaultValue width) height
+
+fun createListRef defaultValue length =
+    List.tabulate (length, (fn x => ref (defaultValue(x))))
+
+fun createGridRef defaultValue (width, height) =
+    createListRef (fn _ => (createListRef (fn _ => defaultValue) width)) height
+
+fun getElementInGridRef grid y x =
+    List.nth (!(List.nth (grid, y)), x)
+
+(* Returns (idxMax, max) -- Asumes that there is only one maximum *)
 fun getMax isGreater minValue x =
     let
 	fun helper ([], _, max, idxMax) = (idxMax, max)
@@ -67,6 +73,9 @@ fun removeElementFromList _ _ [] = []
     then removeElementFromList compare el t
     else h :: (removeElementFromList compare el t)
 
+fun enumerate x =
+    List.tabulate (List.length x, (fn n => (n, List.nth (x, n))))
+
 (* MAP *)
 structure IntKey =
 struct
@@ -75,3 +84,6 @@ val compare = Int.compare
 end
 
 structure intMap = RedBlackMapFn(IntKey)
+
+(* CELL *)
+type cell = {x: int, y: int}
