@@ -71,5 +71,101 @@ fun play (numPlayers, numMarbles) =
 	!(getMaxScore scores)
     end
 
-val star1 = play input_star1
-val star2 = play input_star2
+(* -------------------- *)
+(* --- OPTIMIZATION --- *)
+(* -------------------- *)
+fun remove circleEnd =
+    let
+	fun helper circ idx acc =
+	    if idx = 0
+	    then (acc, hd circ, tl circ)
+	    else helper (tl circ) (idx - 1) ((hd circ) :: acc)
+    in
+	helper circleEnd 6 []
+    end
+
+fun listToString l =
+    List.foldl (fn (x, y) => y ^ " " ^ Int.toString(x)) "" l
+
+fun splitOnIdx l i =
+    if i = 0
+    then ([], l, i)
+    else
+	let
+	    val (f, e, _) = splitOnIdx (tl l) (i - 1)
+	in
+	    ((hd l) :: f, e, i)
+	end
+
+fun moveEndToFront endCircle needed =
+    let
+	val len = length endCircle
+	fun helper e =
+	    if null e
+	    then ([], [], 0)
+	    else
+		let
+		    val (addFront, newEnd, taken) = helper (tl e)
+		in
+		    if taken >= needed
+		    then ((hd e) :: addFront, newEnd, taken)
+		    else (addFront, (hd e) :: newEnd, taken + 1)
+		end
+	val (newEnd, addFront, _) = if len > needed + 6
+				    then splitOnIdx endCircle 7
+				    else helper endCircle
+    in
+	(newEnd, List.rev addFront)
+    end
+
+fun printWholeList listFront listEnd =
+    print ((listToString listFront) ^ " --- " ^ listToString (rev listEnd) ^ "\n")
+
+(* Current marble is always at index 0 of circleFront *)
+fun next (player, marNum, lastMar, circleFront, circleEnd, scores) =
+    let
+	val _ = printProgress marNum lastMar
+	val nextPlayer = (player + 1) mod (length scores)
+    in
+	if marNum > lastMar
+	then circleFront @ (List.rev circleEnd)
+	else if marNum mod 23 = 0
+	then
+	    let
+		val plSc = List.nth (scores, player)
+		val (addFront, takenMarble, newEnd) = remove circleEnd
+	    in
+		plSc := (!plSc) + marNum + takenMarble;
+		next (nextPlayer, marNum + 1, lastMar, addFront @ circleFront, newEnd, scores)
+	    end
+	else if length circleFront > 1
+	then
+	    let
+		val first :: second :: tailFront = circleFront
+		val newFront = marNum :: tailFront
+		val newEnd = second :: first :: circleEnd
+	    in
+		next (nextPlayer, marNum + 1, lastMar, newFront, newEnd, scores)
+	    end
+	else
+	    let
+		val needed = 23 - (marNum mod 23)
+		val (newEnd, addFront) = moveEndToFront circleEnd needed
+		val newFront = circleFront @ addFront
+	    in
+		next (player, marNum, lastMar, newFront, newEnd, scores)
+	    end
+    end
+
+fun game (np, nm) =
+    let
+	val scores = initScores np
+    in
+	next (1, 2, nm, [1, 0], [], scores);
+	!(getMaxScore scores)
+    end
+
+	(*
+val star1 = game input_star1
+val star2 = game input_star2
+	*)
